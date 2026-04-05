@@ -46,7 +46,18 @@ WordCount *word_counts = NULL;
  */
 int num_words(FILE* infile) {
   int num_words = 0;
+  int ch;
+  int in_word = 0;
 
+  while((ch = fgetc(infile)) != EOF) {
+    if(isalnum(ch)) in_word = 1;
+    else {
+      if(in_word) num_words++;
+      in_word = 0;
+    }
+  }
+
+  if(in_word) num_words++;
   return num_words;
 }
 
@@ -62,6 +73,39 @@ int num_words(FILE* infile) {
  * and 0 otherwise.
  */
 int count_words(WordCount **wclist, FILE *infile) {
+  char buffer[MAX_WORD_LEN];
+  int ch;
+  int in_word = 0;
+  int index = 0;
+
+  while((ch = fgetc(infile)) != EOF) {
+
+    if(isalnum(ch)) {
+      if(in_word) {
+        buffer[index] = tolower(ch);
+        index++;
+      }
+      else {
+        buffer[0] = tolower(ch);
+        index = 1;
+        in_word = 1;
+      }
+    }
+    else {
+      if(in_word) {
+        buffer[index] = '\0';
+        add_word(wclist, buffer);
+        in_word = 0;
+      }
+    }
+  }
+
+  if(in_word) {
+    buffer[index] = '\0';
+    add_word(wclist, buffer);
+    in_word = 0;
+  }
+
   return 0;
 }
 
@@ -70,7 +114,10 @@ int count_words(WordCount **wclist, FILE *infile) {
  * Useful function: strcmp().
  */
 static bool wordcount_less(const WordCount *wc1, const WordCount *wc2) {
-  return 0;
+  if(wc1->count == wc2->count) {
+    return strcmp(wc1->word, wc2->word) < 0 ? 1 : 0;
+  }
+  return wc1->count < wc2->count;
 }
 
 // In trying times, displays a helpful message.
@@ -137,14 +184,19 @@ int main (int argc, char *argv[]) {
     // At least one file specified. Useful functions: fopen(), fclose().
     // The first file can be found at argv[optind]. The last file can be
     // found at argv[argc-1].
+
+    infile = fopen(argv[optind], "r");
   }
 
   if (count_mode) {
-    printf("The total number of words is: %i\n", total_words);
+    total_words = num_words(infile);
+    printf("\nThe total number of words is: %i\n", total_words);
   } else {
+    
+    count_words(&word_counts, infile);
     wordcount_sort(&word_counts, wordcount_less);
 
-    printf("The frequencies of each word are: \n");
+    printf("\nThe frequencies of each word are: \n");
     fprint_words(word_counts, stdout);
 }
   return 0;

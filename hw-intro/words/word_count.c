@@ -26,9 +26,7 @@ Mutators take a reference to a list as first arg.
 
 char *new_string(char *str) {
   char *new_str = (char *) malloc(strlen(str) + 1);
-  if (new_str == NULL) {
-    return NULL;
-  }
+  if(new_str == NULL) return NULL;
   return strcpy(new_str, str);
 }
 
@@ -47,13 +45,24 @@ ssize_t len_words(WordCount *wchead) {
      this function.
   */
     size_t len = 0;
+    WordCount *node = wchead;
+
+    while(node != NULL) {
+      len++;
+      node = node->next;
+    }
+
     return len;
 }
 
 WordCount *find_word(WordCount *wchead, char *word) {
   /* Return count for word, if it exists */
-  WordCount *wc = NULL;
-  return wc;
+  WordCount *node = wchead;
+  while(node != NULL) {
+    if(strcmp(node->word, word) == 0) return node;
+    node = node->next;
+  }
+  return NULL;
 }
 
 int add_word(WordCount **wclist, char *word) {
@@ -61,6 +70,36 @@ int add_word(WordCount **wclist, char *word) {
      Otherwise insert with count 1.
      Returns 0 if no errors are encountered in the body of this function; 1 otherwise.
   */
+
+  WordCount *wc;
+  if(*wclist == NULL) {
+    wc = malloc(sizeof(WordCount));
+    wc->count = 1;
+    wc->word = new_string(word);
+    wc->next = NULL;
+
+    *wclist = wc;
+    return 0;
+  }
+
+  wc = find_word(*wclist, word);
+  if(wc != NULL) {
+    wc->count += 1;
+    return 0;
+  }
+
+  wc = *wclist;
+  while(wc->next != NULL) {
+    wc = wc->next;
+  }
+
+  wc->next = malloc(sizeof(WordCount));
+  wc = wc->next;
+
+  wc->count = 1;
+  wc->word = new_string(word);
+  wc->next = NULL;
+
  return 0;
 }
 
